@@ -125,11 +125,12 @@ const SidebarContent: React.FC<{
   return (
     <Box
       w="280px"
-      h="100vh"
+      minH="100%"
+      // h={"100vh"}
       borderRight={{ base: "none", lg: "1px solid" }}
       borderColor={{ base: "none", lg: "gray.200" }}
       _dark={{ borderColor: 'gray.800' }}
-      display="flex"
+      // display="flex"
       flexDirection="column"
     >
       {/* Header */}
@@ -159,15 +160,6 @@ const SidebarContent: React.FC<{
               onClick={onItemClick}
             />
           ))}
-        </VStack>
-
-        {/* Separator */}
-        <Box py="6">
-          <Separator />
-        </Box>
-
-        {/* Bottom Navigation */}
-        <VStack align="stretch">
           {bottomMenuItems.map((item) => (
             <MenuItem
               key={item.label}
@@ -179,46 +171,51 @@ const SidebarContent: React.FC<{
             />
           ))}
         </VStack>
-      </Box>
+        
+        {/* Separator */}
+        <Box py="6">
+          <Separator />
+        </Box>
 
-      {/* User Profile */}
-      <Box px="4" py="4">
-        <HStack p="3" borderRadius="lg">
-          <Avatar.Root bg={primaryColor}>
-            <Avatar.Fallback name={user?.username} />
-          </Avatar.Root>
-          <Box flex="1">
-            <Text fontSize="sm" fontWeight="semibold">
-              {user?.username}
-            </Text>
-            <Text fontSize="xs" color="gray.500">
-              {user?.email}
-            </Text>
-          </Box>
-          <Menu.Root>
-            <Menu.Trigger asChild>
-                <IconButton
-                    aria-label="More options"
-                    variant="ghost"
-                    size="xs">
-                        <LuEllipsisVertical size={16} />
-                </IconButton>
-            </Menu.Trigger>
-            <Portal>
-                <Menu.Positioner>
-                    <Menu.Content zIndex={1600}>
-                        <Menu.Item value="profile" asChild>
-                          <Link href='/dashboard/profile'>
-                            Profile
-                          </Link>
-                        </Menu.Item>
-                        <Menu.Separator />
-                        <Menu.Item value="logout" onClick={handleLogout}>Logout</Menu.Item>
-                    </Menu.Content>
-                </Menu.Positioner>
-            </Portal>
-          </Menu.Root>
-        </HStack>
+        {/* User Profile */}
+        <Box py={"6"}>
+          <HStack p="3" borderRadius="lg">
+            <Avatar.Root bg={primaryColor}>
+              <Avatar.Fallback name={user?.username} />
+            </Avatar.Root>
+            <Box flex="1">
+              <Text fontSize="sm" fontWeight="semibold">
+                {user?.username}
+              </Text>
+              <Text fontSize="xs" color="gray.500">
+                {user?.email}
+              </Text>
+            </Box>
+            <Menu.Root>
+              <Menu.Trigger asChild>
+                  <IconButton
+                      aria-label="More options"
+                      variant="ghost"
+                      size="xs">
+                          <LuEllipsisVertical size={16} />
+                  </IconButton>
+              </Menu.Trigger>
+              <Portal>
+                  <Menu.Positioner>
+                      <Menu.Content zIndex={1600}>
+                          <Menu.Item value="profile" asChild>
+                            <Link href='/dashboard/profile'>
+                              Profile
+                            </Link>
+                          </Menu.Item>
+                          <Menu.Separator />
+                          <Menu.Item value="logout" onClick={handleLogout}>Logout</Menu.Item>
+                      </Menu.Content>
+                  </Menu.Positioner>
+              </Portal>
+            </Menu.Root>
+          </HStack>
+        </Box>
       </Box>
     </Box>
   );
@@ -248,7 +245,7 @@ const SideBar: React.FC<SideBarProps> = ({ children }) => {
 
   return (
     <ProtectedRoute>
-      <Box display="flex" h="100vh">
+      <Box display="flex" h={"100vh"}>
         {/* Desktop Sidebar */}
         <Box display={{ base: "none", lg: "block" }}>
           <SidebarContent 
