@@ -17,11 +17,10 @@ import {
   IconButton, 
   Menu, 
   Portal, 
-  Flex, 
   useDisclosure,
   Drawer,
-  Heading,
   Avatar,
+  Spacer
 } from '@chakra-ui/react';
 import { 
   LuLayoutDashboard, 
@@ -140,6 +139,10 @@ const SidebarContent: React.FC<{
           <Text fontSize="lg" fontWeight="semibold">
             Finance App
           </Text>
+          <Spacer />
+          <Box display={{ base: "none", lg: "block" }}>
+              <ColorModeButton />
+          </Box>
         </HStack>
       </Box>
 
@@ -221,19 +224,19 @@ const SidebarContent: React.FC<{
   );
 };
 
-const getPageTitle = (pathname: string): string => {
-  const routes: Record<string, string> = {
-    '/dashboard': 'Dashboard',
-    '/dashboard/accounts': 'Accounts',
-    '/dashboard/transfers': 'Transfers', 
-    '/dashboard/transactions': 'Transactions',
-    '/dashboard/categories': 'Categories',
-    '/dashboard/help': 'Help Center',
-    '/dashboard/profile': 'Profile'
-  };
+// const getPageTitle = (pathname: string): string => {
+//   const routes: Record<string, string> = {
+//     '/dashboard': 'Dashboard',
+//     '/dashboard/accounts': 'Accounts',
+//     '/dashboard/transfers': 'Transfers', 
+//     '/dashboard/transactions': 'Transactions',
+//     '/dashboard/categories': 'Categories',
+//     '/dashboard/help': 'Help Center',
+//     '/dashboard/profile': 'Profile'
+//   };
   
-  return routes[pathname] || 'Dashboard';
-};
+//   return routes[pathname] || 'Dashboard';
+// };
 
 interface SideBarProps {
   children: React.ReactNode;
@@ -256,8 +259,8 @@ const SideBar: React.FC<SideBarProps> = ({ children }) => {
         {/* Mobile Drawer */}
         <Drawer.Root 
             open={isOpen} 
-            onOpenChange={({ open }) => open ? onOpen() : onClose()} 
-            placement="start"
+            onOpenChange={({ open }) => open ? onOpen() : onClose()}
+            placement={{ mdDown: "top", md: "start" }}
         >
         <Drawer.Backdrop />
         <Drawer.Positioner>
@@ -314,14 +317,14 @@ const SideBar: React.FC<SideBarProps> = ({ children }) => {
             </HStack>
 
           {/* Page Header */}
-          <Flex justify={{ base: "center", lg: "space-between" }} align="center" p="4" borderBottom="1px solid" borderColor="gray.200" _dark={{ borderColor: 'gray.800' }}>
+          {/* <Flex justify={{ base: "center", lg: "space-between" }} align="center" p="4" borderBottom="1px solid" borderColor="gray.200" _dark={{ borderColor: 'gray.800' }}>
             <Heading color={primaryColor}>
               {getPageTitle(pathname)}
             </Heading>
             <Box display={{ base: "none", lg: "block" }}>
               <ColorModeButton />
             </Box>
-          </Flex>
+          </Flex> */}
 
           {/* Page Content */}
           <Box flex="1" overflow="auto">

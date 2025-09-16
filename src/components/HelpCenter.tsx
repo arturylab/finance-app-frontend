@@ -162,6 +162,9 @@ const HelpCenter: React.FC = () => {
       <Stack gap="8">
         {/* Header */}
         <Stack gap="4" textAlign="center">
+          <Heading>
+            Help Center
+          </Heading>
           <Text fontSize="md" color="fg.muted">
             Find answers to the most frequently asked questions about your personal finance app
           </Text>

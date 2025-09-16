@@ -26,6 +26,7 @@ import {
   Alert,
   FormatNumber,
   Stat,
+  Spacer
 } from '@chakra-ui/react';
 import { 
   LuCirclePlus, 
@@ -118,24 +119,26 @@ export default function Accounts() {
 
   return (
     <Box p={6} maxW="6xl" mx="auto">
-      <VStack align="start" mb={6}>
-        <Text fontSize="md">
-          Manage your financial accounts
-        </Text>
-      </VStack>
-
-      {/* Add Account Button */}
-      <Box mb={6}>
-        <Flex justify={"flex-end"}>
-          <Button 
-            onClick={onOpen} 
-          >
-            <LuCirclePlus color='#4DE3AF' />
-            Add Account
-          </Button>
-
-        </Flex>
-      </Box>
+      <HStack>
+        <VStack align="start" mb={6}>
+          <Heading>
+            Accounts
+          </Heading>
+          <Text fontSize="md">
+            Manage your financial accounts
+          </Text>
+        </VStack>
+        <Spacer />
+        {/* Add Account Button */}
+        <Box mb={6}>
+          <Flex justify={"flex-end"}>
+            <Button onClick={onOpen} size={{ base: "xs", md: "sm", lg: "md" }}>
+              <LuCirclePlus color='#4DE3AF' />
+                Add Account
+            </Button>
+          </Flex>
+        </Box>
+      </HStack>
 
       {/* Accounts List or Empty State */}
       {accounts.length === 0 ? (

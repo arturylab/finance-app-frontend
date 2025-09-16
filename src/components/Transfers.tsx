@@ -30,6 +30,8 @@ import {
   NativeSelectField,
   NativeSelectRoot,
   Textarea,
+  Heading,
+  Spacer
 } from '@chakra-ui/react';
 import { toaster } from '@/components/ui/toaster';
 import { 
@@ -208,21 +210,26 @@ export default function Transfers() {
 
   return (
     <Box p={6} maxW="7xl" mx="auto">
-      <VStack align="start" mb={6}>
-        <Text fontSize="md">
-          Transfer money between your accounts
-        </Text>
-      </VStack>
-
-      {/* Add Transfer Button */}
-      <Box mb={6}>
-        <Flex justify="flex-end">
-          <Button onClick={onOpen}>
-            <LuCirclePlus color='#4DE3AF' />
-            Add Transfer
-          </Button>
-        </Flex>
-      </Box>
+      <HStack>
+        <VStack align="start" mb={6}>
+          <Heading>
+            Transfers
+          </Heading>
+          <Text fontSize="md">
+            Transfer money between your accounts
+          </Text>
+        </VStack>
+        <Spacer />
+        {/* Add Transfer Button */}
+        <Box mb={6}>
+          <Flex justify="flex-end">
+            <Button onClick={onOpen} size={{ base: "xs", md: "sm", lg: "md" }}>
+              <LuCirclePlus color='#4DE3AF' />
+                Add Transfer
+            </Button>
+          </Flex>
+        </Box>
+      </HStack>
 
       {/* Transfers List or Empty State */}
       {transfers.length === 0 ? (

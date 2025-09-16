@@ -26,7 +26,9 @@ import {
   Table,
   Fieldset,
   Field,
-  RadioGroup
+  RadioGroup,
+  Heading,
+  Spacer
 } from '@chakra-ui/react';
 import { 
   LuCirclePlus, 
@@ -234,21 +236,26 @@ export default function Categories() {
 
   return (
     <Box p={6} maxW="7xl" mx="auto">
-      <VStack align="start" mb={6}>
-        <Text fontSize="md">
-          Organize your transactions with custom categories
-        </Text>
-      </VStack>
-
-      {/* Add Category Button */}
-      <Box mb={6}>
-        <Flex justify="flex-end">
-          <Button onClick={onOpen}>
-            <LuCirclePlus color='#4DE3AF' />
-            Add Category
-          </Button>
-        </Flex>
-      </Box>
+      <HStack>
+        <VStack align="start" mb={6}>
+          <Heading>
+            Categories
+          </Heading>
+          <Text fontSize="md">
+            Organize your transactions with custom categories
+          </Text>
+        </VStack>
+        <Spacer />
+        {/* Add Category Button */}
+        <Box mb={6}>
+          <Flex justify="flex-end">
+            <Button onClick={onOpen} size={{ base: "xs", md: "sm", lg: "md" }}>
+              <LuCirclePlus color='#4DE3AF' />
+                Add Category
+            </Button>
+          </Flex>
+        </Box>
+      </HStack>
 
       {/* Categories Tables */}
       <Grid 

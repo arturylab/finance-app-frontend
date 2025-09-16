@@ -18,6 +18,7 @@ import {
   Table,
   Badge,
   Flex,
+  Heading,
 } from '@chakra-ui/react';
 import { 
   LuWallet, 
@@ -192,6 +193,9 @@ export default function Dashboard() {
     <Box p={6} maxW="7xl" mx="auto">
       {/* Header */}
       <VStack align="start" mb={8}>
+        <Heading>
+          Dashboard
+        </Heading>
         <Text fontSize="md" color="gray.600" _dark={{ color: 'gray.400' }}>
           Overview of your financial status
         </Text>
