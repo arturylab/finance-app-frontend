@@ -131,7 +131,7 @@ const SideBar: React.FC<SideBarProps> = ({ children }) => {
   const renderSidebarContent = (onItemClick?: () => void) => (
     <Box
       w="280px"
-      h="full"
+      h={{ base: "auto", lg: "100vh" }}
       display="flex"
       flexDirection="column"
     >
@@ -227,13 +227,21 @@ const SideBar: React.FC<SideBarProps> = ({ children }) => {
 
   return (
     <ProtectedRoute>
-      <Box display="flex" h="100vh" flexDirection="row">
+      <Box 
+        display="flex" 
+        minH="100vh" 
+        flexDirection="row"
+        position="relative"
+      >
         {/* Desktop Sidebar */}
         <Box 
           display={{ base: "none", lg: "block" }}
           borderRight="1px solid"
           borderColor="gray.200"
           _dark={{ borderColor: 'gray.800' }}
+          position="sticky"
+          top="0"
+          alignSelf="flex-start"
         >
           {renderSidebarContent()}
         </Box>
@@ -268,35 +276,47 @@ const SideBar: React.FC<SideBarProps> = ({ children }) => {
         </Drawer.Root>
 
         {/* Main Content */}
-        <Box flex="1" display="flex" flexDirection="column">
+        <Box 
+          flex="1" 
+          display="flex" 
+          flexDirection="column"
+          minH="100vh"
+        >
           {/* Mobile Header */}
-          <HStack 
-            display={{ base: "flex", lg: "none" }} 
-            p="4" 
+          <Box
+            display={{ base: "block", lg: "none" }}
+            position="sticky"
+            top="0"
+            bg="white"
+            _dark={{ bg: 'gray.900', borderColor: 'gray.800' }}
             borderBottom="1px solid"
             borderColor="gray.200"
-            _dark={{ borderColor: 'gray.800' }}
-            justify="space-between"
+            zIndex="sticky"
           >
-            <ColorModeButton />
-            <HStack>
-              <Image src="/logo.png" alt="finance app logo" boxSize="32px"/>
-              <Text fontSize="lg" fontWeight="semibold">
-                Finance App
-              </Text>
-            </HStack>
-            <IconButton
-              aria-label="Open menu"
-              variant="ghost"
-              size="md"
-              onClick={onOpen}
+            <HStack 
+              p="4" 
+              justify="space-between"
             >
-              <LuAlignRight />
-            </IconButton>
-          </HStack>
+              <ColorModeButton />
+              <HStack>
+                <Image src="/logo.png" alt="finance app logo" boxSize="32px"/>
+                <Text fontSize="lg" fontWeight="semibold">
+                  Finance App
+                </Text>
+              </HStack>
+              <IconButton
+                aria-label="Open menu"
+                variant="ghost"
+                size="md"
+                onClick={onOpen}
+              >
+                <LuAlignRight />
+              </IconButton>
+            </HStack>
+          </Box>
 
           {/* Page Content */}
-          <Box flex="1" overflow="auto">
+          <Box flex="1">
             {children}
           </Box>
         </Box>
