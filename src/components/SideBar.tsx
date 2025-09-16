@@ -125,8 +125,7 @@ const SidebarContent: React.FC<{
   return (
     <Box
       w="280px"
-      minH="100%"
-      // h={"100vh"}
+      h="100vh"
       borderRight={{ base: "none", lg: "1px solid" }}
       borderColor={{ base: "none", lg: "gray.200" }}
       _dark={{ borderColor: 'gray.800' }}
@@ -245,7 +244,7 @@ const SideBar: React.FC<SideBarProps> = ({ children }) => {
 
   return (
     <ProtectedRoute>
-      <Box display="flex" h={"100vh"}>
+      <Box display="flex" h="100vh">
         {/* Desktop Sidebar */}
         <Box display={{ base: "none", lg: "block" }}>
           <SidebarContent 
