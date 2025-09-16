@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import Footer from '@/components/Footer';
 
 import {
     Box,
@@ -118,8 +119,10 @@ const Login = () => {
               </Link>
             </Text>
           </Fieldset.Root>
+          <Footer />
       </Flex>
     </Box>
+
   );
 };
 

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { PasswordInput } from "@/components/ui/password-input"
+import Footer from '@/components/Footer';
 
 import {
     Box,
@@ -103,6 +104,7 @@ const Register = () => {
               </Link>
             </Text>
           </Fieldset.Root>
+          <Footer />
       </Flex>
     </Box>
   );
