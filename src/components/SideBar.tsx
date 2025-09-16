@@ -206,7 +206,13 @@ const SideBar: React.FC<SideBarProps> = ({ children }) => {
               <Portal>
                 <Menu.Positioner>
                   <Menu.Content zIndex={1600}>
-                    <Menu.Item value="profile" asChild>
+                    <Menu.Item 
+                      value="profile" 
+                      onClick={() => {
+                        router.push('/dashboard/profile');
+                        onItemClick?.();
+                      }}
+                    >
                       <Link href='/dashboard/profile'>
                         Profile
                       </Link>
@@ -250,7 +256,7 @@ const SideBar: React.FC<SideBarProps> = ({ children }) => {
         <Drawer.Root 
           open={isOpen} 
           onOpenChange={({ open }) => open ? onOpen() : onClose()}
-          placement={{ mdDown: "top", md: "start" }}
+          placement={{ mdDown: "end", md: "start" }}
         >
           <Drawer.Backdrop />
           <Drawer.Positioner>
