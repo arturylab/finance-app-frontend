@@ -14,7 +14,6 @@ import {
   Icon,
 } from '@chakra-ui/react';
 import {
-  LuCreditCard,
   LuPiggyBank,
   LuTrendingUp,
   LuShield,
@@ -26,7 +25,7 @@ interface FAQItem {
   value: string;
   question: string;
   answer: string | React.ReactNode;
-  category: 'accounts' | 'transactions' | 'security' | 'general';
+  category: 'accounts' | 'Financial Control' | 'security' | 'general';
 }
 
 const HelpCenter: React.FC = () => {
@@ -53,7 +52,7 @@ const HelpCenter: React.FC = () => {
     },
     {
       value: 'add-transaction',
-      category: 'transactions',
+      category: 'Financial Control',
       question: 'How do I record a new transaction?',
       answer: (
         <Stack gap="2">
@@ -68,13 +67,13 @@ const HelpCenter: React.FC = () => {
     },
     {
       value: 'categories',
-      category: 'transactions',
+      category: 'Financial Control',
       question: 'How do transaction categories work?',
       answer: 'Categories help you organize your transactions into income and expenses. You can create custom categories like "Food", "Transportation", "Salary", etc. This will help you have better control and analysis of your finances.'
     },
     {
       value: 'transfers',
-      category: 'transactions',
+      category: 'Financial Control',
       question: 'Can I transfer money between my accounts?',
       answer: 'Yes, you can make transfers between your accounts using the transfer function. This will automatically update the balance of both accounts without duplicating transactions.'
     },
@@ -122,8 +121,8 @@ const HelpCenter: React.FC = () => {
     switch (category) {
       case 'accounts':
         return <LuPiggyBank />;
-      case 'transactions':
-        return <LuCreditCard />;
+      case 'Financial Control':
+        return <LuTrendingUp />;
       case 'security':
         return <LuShield />;
       default:
@@ -135,7 +134,7 @@ const HelpCenter: React.FC = () => {
     switch (category) {
       case 'accounts':
         return 'green';
-      case 'transactions':
+      case 'Financial Control':
         return 'blue';
       case 'security':
         return 'red';
@@ -148,8 +147,8 @@ const HelpCenter: React.FC = () => {
     switch (category) {
       case 'accounts':
         return 'Accounts';
-      case 'transactions':
-        return 'Transactions';
+      case 'Financial Control':
+        return 'Financial Control';
       case 'security':
         return 'Security';
       default:
@@ -172,23 +171,29 @@ const HelpCenter: React.FC = () => {
 
         {/* Quick Stats */}
         <HStack justify="center" flexWrap="wrap" gap="4">
-          <Badge size="md" variant="subtle" colorPalette="blue">
-            <Icon>
-              <LuTrendingUp />
-            </Icon>
-            Financial Control
-          </Badge>
           <Badge size="md" variant="subtle" colorPalette="green">
             <Icon>
               <LuPiggyBank />
             </Icon>
             Account Management
           </Badge>
-          <Badge size="md" variant="subtle" colorPalette="purple">
+          <Badge size="md" variant="subtle" colorPalette="blue">
+            <Icon>
+              <LuTrendingUp />
+            </Icon>
+            Financial Control
+          </Badge>
+          <Badge size="md" variant="subtle" colorPalette="red">
             <Icon>
               <LuShield />
             </Icon>
             Secure Data
+          </Badge>
+          <Badge size="md" variant="subtle" colorPalette="gray">
+            <Icon>
+              <LuLifeBuoy />
+            </Icon>
+            General
           </Badge>
         </HStack>
 
@@ -250,7 +255,7 @@ const HelpCenter: React.FC = () => {
 
             <Stack gap="4">
               <HStack justify="center" flexWrap="wrap" gap="4">
-                <Button bg="#4DE3AF" size="sm">
+                <Button bg="#4DE3AF" size="sm" color="gray.800">
                   <Icon>
                     <LuMail />
                   </Icon >
@@ -259,28 +264,6 @@ const HelpCenter: React.FC = () => {
               </HStack>
 
             </Stack>
-          </Stack>
-        </Box>
-
-        {/* Tips Section */}
-        <Box
-          bg="#4DE3AF"
-          p="6"
-          borderRadius="lg"
-        >
-          <Stack gap="4">
-            <HStack>
-              <Icon fontSize="xl" color={"gray.800"}>
-                <LuLifeBuoy />
-              </Icon>
-              <Heading size="md" color={"gray.800"}>Pro Tip</Heading>
-            </HStack>
-            <Text color={"gray.800"}>
-              To get the most out of your finance app, we recommend:
-              reviewing your transactions weekly, categorizing all your expenses and income,
-              and setting monthly savings goals. This will help you maintain better
-              control of your personal finances!
-            </Text>
           </Stack>
         </Box>
       </Stack>

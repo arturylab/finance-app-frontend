@@ -20,6 +20,8 @@ import {
   Flex,
   Heading,
 } from '@chakra-ui/react';
+import { Chart, useChart } from "@chakra-ui/charts";
+import { Cell, Legend, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { 
   LuWallet, 
   LuCreditCard, 
@@ -79,6 +81,23 @@ export default function Dashboard() {
     loadAccounts();
   }, []);
 
+  // Helper function to get consistent colors for categories
+  const getColorForIndex = (index: number): string => {
+    const colors = [
+      "red.500",
+      "pink.500",
+      "purple.500",
+      "cyan.500",
+      "blue.500",
+      "teal.500",
+      "green.500",
+      "yellow.500",
+      "orange.500",
+      "grey.500",
+    ];
+    return colors[index % colors.length];
+  };
+
   // Calculate dashboard metrics
   const dashboardMetrics = useMemo((): DashboardMetrics => {
     // Account-based calculations
@@ -128,7 +147,7 @@ export default function Dashboard() {
   const recentTransactions = useMemo(() => {
     return transactionsWithDetails
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 8);
+      .slice(0, 10);
   }, [transactionsWithDetails]);
 
   // Calculate top expense categories for current month
@@ -165,8 +184,21 @@ export default function Dashboard() {
 
     return Array.from(categoryTotals.values())
       .sort((a, b) => b.total - a.total)
-      .slice(0, 5);
   }, [transactionsWithDetails]);
+
+  // Transform data for the chart
+  const expenseChartData = useMemo(() => {
+    return topExpenseCategories.map((item, index) => ({
+      name: item.category.name,
+      value: item.total,
+      count: item.count,
+      color: getColorForIndex(index),
+    }));
+  }, [topExpenseCategories]);
+
+  const expenseChart = useChart({
+    data: expenseChartData,
+  });
 
   // Loading state
   if (loadingAccounts || loadingTransactions || loadingCategories) {
@@ -493,14 +525,14 @@ export default function Dashboard() {
           </Card.Body>
         </Card.Root>
         
-        {/* Top Expense Categories */}
+        {/* Monthly Expense Categories with Pie Chart */}
         <Card.Root>
           <Card.Header>
             <Text fontSize="lg" fontWeight="semibold">
-              Top Expense Categories
+              Monthly Expense Categories
             </Text>
             <Text fontSize="sm" color="gray.600" _dark={{ color: 'gray.400' }}>
-              Highest spending categories this month
+              All spending categories for this month
             </Text>
           </Card.Header>
           <Card.Body>
@@ -509,29 +541,69 @@ export default function Dashboard() {
                 No expense data for this month
               </Text>
             ) : (
-              <VStack gap={3} align="stretch">
-                {topExpenseCategories.map((item, index) => (
-                  <HStack key={item.category.id} justify="space-between">
-                    <HStack>
-                      <Text fontSize="sm" color="gray.500" minW="4">
-                        {index + 1}.
-                      </Text>
-                      <Badge borderRadius="md" colorPalette="red">
-                        {item.category.name}
-                      </Badge>
-                      <Text fontSize="xs" color="gray.500">
-                        ({item.count} {item.count === 1 ? 'transaction' : 'transactions'})
+              <VStack gap={4} align="stretch">
+                {/* Pie Chart */}
+                <Chart.Root height="300px" mx="auto" chart={expenseChart}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Legend 
+                        content={<Chart.Legend />}
+                        wrapperStyle={{ fontSize: '12px' }}
+                      />
+                      <Pie
+                        data={expenseChart.data}
+                        dataKey={expenseChart.key("value")}
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        innerRadius={0}
+                        paddingAngle={2}
+                        isAnimationActive={true}
+                        animationDuration={800}
+                      >
+                        {expenseChart.data.map((item) => (
+                          <Cell 
+                            key={item.name} 
+                            fill={expenseChart.color(item.color)} 
+                          />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </Chart.Root>
+
+                {/* Summary List */}
+                <VStack gap={2} align="stretch" mt={2}>
+                  <Text fontSize="sm" fontWeight="medium" color="gray.700" _dark={{ color: 'gray.300' }}>
+                    Category Details:
+                  </Text>
+                  {topExpenseCategories.map((item, index) => (
+                    <HStack key={item.category.id} justify="space-between">
+                      <HStack>
+                        <Box 
+                          w={3} 
+                          h={3} 
+                          borderRadius="sm"
+                          bg={expenseChart.color(getColorForIndex(index))}
+                        />
+                        <Text fontSize="sm">
+                          {item.category.name}
+                        </Text>
+                        <Text fontSize="xs" color="gray.500">
+                          ({item.count} {item.count === 1 ? 'transaction' : 'transactions'})
+                        </Text>
+                      </HStack>
+                      <Text fontWeight="medium" fontSize="sm">
+                        <FormatNumber
+                          value={item.total}
+                          style="currency"
+                          currency="USD"
+                        />
                       </Text>
                     </HStack>
-                    <Text fontWeight="medium" fontSize="sm">
-                      <FormatNumber
-                        value={item.total}
-                        style="currency"
-                        currency="USD"
-                      />
-                    </Text>
-                  </HStack>
-                ))}
+                  ))}
+                </VStack>
               </VStack>
             )}
           </Card.Body>
