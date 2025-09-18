@@ -21,7 +21,7 @@ import {
   Heading,
 } from '@chakra-ui/react';
 import { Chart, useChart } from "@chakra-ui/charts";
-import { Cell, Legend, Pie, PieChart, ResponsiveContainer } from "recharts";
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { 
   LuWallet, 
   LuCreditCard, 
@@ -84,8 +84,6 @@ export default function Dashboard() {
   // Helper function to get consistent colors for categories
   const getColorForIndex = (index: number): string => {
     const colors = [
-      "red.500",
-      "pink.500",
       "purple.500",
       "cyan.500",
       "blue.500",
@@ -93,6 +91,8 @@ export default function Dashboard() {
       "green.500",
       "yellow.500",
       "orange.500",
+      "pink.500",
+      "red.500",
       "grey.500",
     ];
     return colors[index % colors.length];
@@ -546,21 +546,22 @@ export default function Dashboard() {
                 <Chart.Root height="300px" mx="auto" chart={expenseChart}>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Legend 
-                        content={<Chart.Legend />}
-                        wrapperStyle={{ fontSize: '12px' }}
-                      />
+                      <Tooltip
+          cursor={false}
+          animationDuration={100}
+          content={<Chart.Tooltip hideLabel />}
+        />
                       <Pie
                         data={expenseChart.data}
                         dataKey={expenseChart.key("value")}
                         nameKey="name"
                         cx="50%"
                         cy="50%"
-                        outerRadius={80}
+                        outerRadius={120}
                         innerRadius={0}
                         paddingAngle={2}
                         isAnimationActive={true}
-                        animationDuration={800}
+                        animationDuration={1000}
                       >
                         {expenseChart.data.map((item) => (
                           <Cell 
@@ -589,9 +590,6 @@ export default function Dashboard() {
                         />
                         <Text fontSize="sm">
                           {item.category.name}
-                        </Text>
-                        <Text fontSize="xs" color="gray.500">
-                          ({item.count} {item.count === 1 ? 'transaction' : 'transactions'})
                         </Text>
                       </HStack>
                       <Text fontWeight="medium" fontSize="sm">
