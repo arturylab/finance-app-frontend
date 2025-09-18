@@ -137,16 +137,18 @@ const SideBar: React.FC<SideBarProps> = ({ children }) => {
     >
       {/* Header */}
       <Box p={6}>
-        <HStack>
-          <Image src="/logo.png" alt="finance app logo" boxSize="32px"/>
-          <Text fontSize="lg" fontWeight="semibold">
-            Finance App
-          </Text>
-          <Spacer />
-          <Box display={{ base: "none", lg: "block" }}>
-            <ColorModeButton />
-          </Box>
-        </HStack>
+        <Link href='/dashboard'>
+          <HStack>
+            <Image src="/logo.png" alt="finance app logo" boxSize="32px"/>
+            <Text fontSize="lg" fontWeight="semibold">
+              Finance App
+            </Text>
+            <Spacer />
+            <Box display={{ base: "none", lg: "block" }}>
+              <ColorModeButton />
+            </Box>
+          </HStack>
+        </Link>
       </Box>
 
       {/* Main Navigation */}
@@ -304,12 +306,14 @@ const SideBar: React.FC<SideBarProps> = ({ children }) => {
               justify="space-between"
             >
               <ColorModeButton />
-              <HStack>
-                <Image src="/logo.png" alt="finance app logo" boxSize="32px"/>
-                <Text fontSize="lg" fontWeight="semibold">
-                  Finance App
-                </Text>
-              </HStack>
+              <Link href='/dashboard'>
+                <HStack>
+                  <Image src="/logo.png" alt="finance app logo" boxSize="32px"/>
+                  <Text fontSize="lg" fontWeight="semibold">
+                    Finance App
+                  </Text>
+                </HStack>
+              </Link>
               <IconButton
                 aria-label="Open menu"
                 variant="ghost"

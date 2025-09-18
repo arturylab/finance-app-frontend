@@ -27,7 +27,8 @@ import {
   LuCircleAlert,
 } from 'react-icons/lu';
 import { apiClient } from '@/lib/api';
-import type { User } from '@/types/auth';
+import { useAuth } from '@/hooks/useAuth';
+import type { User, UpdateUserProfileData } from '@/types/auth';
 
 interface ProfileFormData {
   first_name: string;
@@ -35,9 +36,10 @@ interface ProfileFormData {
 }
 
 const Profile: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const { user: authUser, refreshToken } = useAuth();
+  const [user, setUser] = useState<User | null>(authUser);
   const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -47,10 +49,23 @@ const Profile: React.FC = () => {
     last_name: '',
   });
 
+  // Synchronize with the user from the auth context
+  useEffect(() => {
+    if (authUser) {
+      setUser(authUser);
+      setFormData({
+        first_name: authUser.first_name || '',
+        last_name: authUser.last_name || '',
+      });
+    }
+  }, [authUser]);
+
   // Load user data on component mount
   useEffect(() => {
-    loadUserData();
-  }, []);
+    if (!user) {
+      loadUserData();
+    }
+  }, [user]);
 
   const loadUserData = async () => {
     try {
@@ -106,31 +121,39 @@ const Profile: React.FC = () => {
         throw new Error('User data not available');
       }
 
-      // Here you would typically call an API endpoint to update the user
-      // Since the API structure shows user update isn't available, 
-      // we'll simulate the update for demo purposes
+      // Prepare data for API call
+      const updateData: UpdateUserProfileData = {};
       
-      // For now, we'll just update local state
-      // In a real app, you'd make an API call like:
-      // const updatedUser = await apiClient.users.update(user.id, formData);
+      if (formData.first_name !== (user.first_name || '')) {
+        updateData.first_name = formData.first_name;
+      }
       
-      const updatedUser: User = {
-        ...user,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-      };
+      if (formData.last_name !== (user.last_name || '')) {
+        updateData.last_name = formData.last_name;
+      }
 
+      if (Object.keys(updateData).length === 0) {
+        setIsEditing(false);
+        setSuccess('No changes to save.');
+        setTimeout(() => setSuccess(null), 3000);
+        return;
+      }
+
+      const updatedUser = await apiClient.auth.updateProfile(updateData);
+      
       setUser(updatedUser);
       setIsEditing(false);
       setSuccess('Profile updated successfully!');
 
-      // Hide success message after 3 seconds
+      await refreshToken();
+
       setTimeout(() => {
         setSuccess(null);
       }, 3000);
 
     } catch (err) {
-      setError('Failed to update profile. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update profile. Please try again.';
+      setError(errorMessage);
       console.error('Error updating profile:', err);
     } finally {
       setSaving(false);
@@ -159,11 +182,34 @@ const Profile: React.FC = () => {
     return 'U';
   };
 
-  if (isLoading) {
+  const hasChanges = () => {
+    if (!user) return false;
+    return (
+      formData.first_name !== (user.first_name || '') ||
+      formData.last_name !== (user.last_name || '')
+    );
+  };
+
+  if (isLoading && !user) {
     return (
       <Container maxW="2xl" py="8">
         <Stack gap="6">
           <Text textAlign="center">Loading profile...</Text>
+        </Stack>
+      </Container>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Container maxW="2xl" py="8">
+        <Stack gap="6">
+          <Alert.Root status="error" variant="subtle">
+            <Icon color="red.fg">
+              <LuCircleAlert />
+            </Icon>
+            <Text>Unable to load user data. Please refresh the page.</Text>
+          </Alert.Root>
         </Stack>
       </Container>
     );
@@ -174,6 +220,7 @@ const Profile: React.FC = () => {
       <Stack gap="8">
         {/* Header */}
         <Stack gap="4" textAlign="center">
+          <Heading size="xl">Profile Settings</Heading>
           <Text fontSize="md" color="fg.muted">
             Manage your account information and preferences
           </Text>
@@ -207,7 +254,7 @@ const Profile: React.FC = () => {
               <Box
                 w="20"
                 h="20"
-                bg="#4DE3AF"
+                bg="teal.500"
                 color="white"
                 borderRadius="full"
                 display="flex"
@@ -247,10 +294,10 @@ const Profile: React.FC = () => {
                       Username
                     </Text>
                     <HStack>
-                      <Icon color="blue.fg">
+                      <Icon color="blue.500">
                         <LuUser />
                       </Icon>
-                      <Text>{user?.username}</Text>
+                      <Text>{user.username}</Text>
                     </HStack>
                   </Stack>
 
@@ -260,10 +307,10 @@ const Profile: React.FC = () => {
                       Email Address
                     </Text>
                     <HStack>
-                      <Icon color="blue.fg">
+                      <Icon color="blue.500">
                         <LuMail />
                       </Icon>
-                      <Text>{user?.email}</Text>
+                      <Text>{user.email}</Text>
                     </HStack>
                   </Stack>
 
@@ -275,6 +322,7 @@ const Profile: React.FC = () => {
                     {!isEditing && (
                       <Button
                         size="sm"
+                        variant="outline"
                         onClick={handleEdit}
                       >
                         <Icon>
@@ -295,9 +343,10 @@ const Profile: React.FC = () => {
                         value={formData.first_name}
                         onChange={(e) => handleInputChange('first_name', e.target.value)}
                         placeholder="Enter your first name"
+                        disabled={isSaving}
                       />
                     ) : (
-                      <Text>{user?.first_name || 'Not provided'}</Text>
+                      <Text>{user.first_name || 'Not provided'}</Text>
                     )}
                   </Stack>
 
@@ -311,9 +360,10 @@ const Profile: React.FC = () => {
                         value={formData.last_name}
                         onChange={(e) => handleInputChange('last_name', e.target.value)}
                         placeholder="Enter your last name"
+                        disabled={isSaving}
                       />
                     ) : (
-                      <Text>{user?.last_name || 'Not provided'}</Text>
+                      <Text>{user.last_name || 'Not provided'}</Text>
                     )}
                   </Stack>
 
@@ -321,9 +371,9 @@ const Profile: React.FC = () => {
                   {isEditing && (
                     <HStack justify="flex-end" gap="3" pt="4">
                       <Button
-                      variant={"outline"}
+                        variant="outline"
                         onClick={handleCancel}
-                        // isDisabled={isSaving}
+                        disabled={isSaving}
                       >
                         <Icon>
                           <LuX />
@@ -334,6 +384,7 @@ const Profile: React.FC = () => {
                         onClick={handleSave}
                         loading={isSaving}
                         loadingText="Saving..."
+                        disabled={!hasChanges()}
                       >
                         <Icon>
                           <LuSave />
@@ -350,14 +401,14 @@ const Profile: React.FC = () => {
 
         {/* Security Note */}
         <Box
-          bg="yellow.subtle"
+          bg="orange.50"
           p="4"
           borderRadius="md"
           borderWidth="1px"
-          borderColor="yellow.muted"
+          borderColor="orange.200"
         >
           <HStack gap="3">
-            <Icon color="yellow.fg" fontSize="lg">
+            <Icon color="orange.500" fontSize="lg">
               <LuCircleAlert />
             </Icon>
             <Stack gap="1">

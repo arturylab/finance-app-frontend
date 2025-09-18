@@ -40,6 +40,11 @@ export interface AuthContextType {
   refreshToken: () => Promise<boolean>;
 }
 
+export interface UpdateUserProfileData {
+  first_name?: string;
+  last_name?: string;
+}
+
 // Financial Models
 export interface Account {
   id: number;
