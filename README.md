@@ -4,14 +4,15 @@
 
 This is the frontend for a personal finance application built with Next.js and Chakra UI. It allows users to manage their financial accounts, track income and expenses, and view their overall financial status on a dashboard.
 
----
-
 ## Live Demo
 
 You can view a live demo of the application here:
 [https://finance-app.arturylab.dev/](https://finance-app.arturylab.dev/)
 
----
+## Backend
+
+You can view a live backend repositorie here:
+[https://github.com/arturylab/finance-app-backend](https://github.com/arturylab/finance-app-backend)
 
 -----
 
