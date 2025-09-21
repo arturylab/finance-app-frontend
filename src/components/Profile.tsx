@@ -412,7 +412,7 @@ const Profile: React.FC = () => {
               <LuCircleAlert />
             </Icon>
             <Stack gap="1">
-              <Text fontWeight="medium">Security Note</Text>
+              <Text fontWeight="medium" color={'gray.800'}>Security Note</Text>
               <Text fontSize="sm" color="fg.muted">
                 To change your username, email, or password, please contact support.
                 Only first name and last name can be updated from this page.

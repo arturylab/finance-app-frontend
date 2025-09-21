@@ -137,18 +137,20 @@ const SideBar: React.FC<SideBarProps> = ({ children }) => {
     >
       {/* Header */}
       <Box p={6}>
-        <Link href='/dashboard'>
           <HStack>
-            <Image src="/logo.png" alt="finance app logo" boxSize="32px"/>
-            <Text fontSize="lg" fontWeight="semibold">
-              Finance App
-            </Text>
+            <Link href='/dashboard'>
+              <Image src="/logo.png" alt="finance app logo" boxSize="32px"/>
+            </Link>
+            <Link href='/dashboard'>
+              <Text fontSize="lg" fontWeight="semibold">
+                Finance App
+              </Text>
+            </Link>
             <Spacer />
             <Box display={{ base: "none", lg: "block" }}>
               <ColorModeButton />
             </Box>
           </HStack>
-        </Link>
       </Box>
 
       {/* Main Navigation */}
