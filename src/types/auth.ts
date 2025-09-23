@@ -273,3 +273,12 @@ export const DEFAULT_CATEGORIES = {
     'Balance Adjustment (-)'
   ]
 } as const;
+
+export interface ChangePasswordData {
+  old_password: string;
+  new_password: string;
+}
+
+export interface ChangePasswordResponse {
+  status: string;
+}

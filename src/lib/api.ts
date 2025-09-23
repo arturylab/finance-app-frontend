@@ -21,7 +21,9 @@ import {
   AccountFilters,
   CategoryFilters,
   TransferFilters,
-  UpdateUserProfileData
+  UpdateUserProfileData,
+  ChangePasswordData,
+  ChangePasswordResponse
 } from '@/types/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
@@ -266,12 +268,22 @@ class AuthApi {
     }
   }
 
-  async updateProfile(data: UpdateUserProfileData): Promise<User> {
+async updateProfile(data: UpdateUserProfileData): Promise<User> {
   try {
     const response = await api.patch('/users/me/profile/', data);
     return response.data;
   } catch (error) {
     handleApiError(error, 'Failed to update user profile');
+    throw error;
+  }
+}
+
+async changePassword(data: ChangePasswordData): Promise<ChangePasswordResponse> {
+  try {
+    const response = await api.put('/users/me/change-password/', data);
+    return response.data;
+  } catch (error) {
+    handleApiError(error, 'Failed to change password');
     throw error;
   }
 }

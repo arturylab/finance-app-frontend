@@ -95,7 +95,7 @@ const HelpCenter: React.FC = () => {
       value: 'password-reset',
       category: 'security',
       question: 'How can I change my password?',
-      answer: 'The password change feature is currently in development. If you need to change your password, contact technical support through the channels available on this page.'
+      answer: 'You can now change your password directly from your profile settings. Navigate to your profile page, click on "Change Password" in the Security section, and follow the prompts.'
     },
     {
       value: 'export-data',
