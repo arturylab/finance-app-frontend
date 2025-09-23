@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTransactions } from '@/hooks/useTransactions';
 import { apiClient } from '@/lib/api';
 import {
@@ -33,15 +33,20 @@ import {
   NativeSelectRoot,
   Textarea,
   Heading,
-  Spacer
+  Spacer,
+  Pagination,
 } from '@chakra-ui/react';
 import { 
   LuCirclePlus, 
   LuPencil, 
   LuTrash2, 
   LuReceipt,
+  LuChevronLeft,
+  LuChevronRight,
 } from "react-icons/lu";
 import { Account, Category, CreateTransactionData, UpdateTransactionData } from '@/types/auth';
+
+const ITEMS_PER_PAGE = 10;
 
 export default function Transactions() {
   const [amount, setAmount] = useState('');
@@ -53,6 +58,7 @@ export default function Transactions() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingSupport, setLoadingSupport] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   
   const { open, onOpen, onClose } = useDisclosure();
 
@@ -64,6 +70,26 @@ export default function Transactions() {
     updateTransaction,
     deleteTransaction,
   } = useTransactions();
+
+  // Calculate pagination
+  const { paginatedTransactions, totalPages } = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const paginated = transactionsWithDetails.slice(startIndex, endIndex);
+    const total = Math.ceil(transactionsWithDetails.length / ITEMS_PER_PAGE);
+    
+    return {
+      paginatedTransactions: paginated,
+      totalPages: total
+    };
+  }, [transactionsWithDetails, currentPage]);
+
+  // Reset to page 1 when transactions change
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [transactionsWithDetails, currentPage, totalPages]);
 
   // Load accounts and categories
   useEffect(() => {
@@ -157,6 +183,10 @@ export default function Transactions() {
     onClose();
   };
 
+  const handlePageChange = (details: { page: number }) => {
+    setCurrentPage(details.page);
+  };
+
   if (loading || loadingSupport) {
     return (
       <Flex justify="center" align="center" minH="200px">
@@ -218,6 +248,15 @@ export default function Transactions() {
         </EmptyState.Root>
       ) : (
         <>
+          {/* Pagination Info */}
+          <Flex justify="space-between" align="center" mb={4}>
+            <Text fontSize="sm" color="gray.600" _dark={{ color: "gray.400" }}>
+              Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to{' '}
+              {Math.min(currentPage * ITEMS_PER_PAGE, transactionsWithDetails.length)} of{' '}
+              {transactionsWithDetails.length} transactions
+            </Text>
+          </Flex>
+
           {/* Desktop table */}
           <Box display={{ base: "none", md: "block" }}>
             <Table.Root size="md" stickyHeader>
@@ -232,7 +271,7 @@ export default function Transactions() {
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {transactionsWithDetails.map((transaction) => (
+                {paginatedTransactions.map((transaction) => (
                   <Table.Row key={transaction.id}>
                     <Table.Cell>
                       {transaction.date}
@@ -332,7 +371,7 @@ export default function Transactions() {
           {/* Mobile Card */}
           <Box display={{ base: "block", md: "none" }}>
             <VStack gap={3}>
-              {transactionsWithDetails.map((transaction) => (
+              {paginatedTransactions.map((transaction) => (
                 <Card.Root key={transaction.id} w="full" size="sm" variant="outline">
                   <Card.Body p={4}>
                     <Table.Root size="sm">
@@ -433,6 +472,39 @@ export default function Transactions() {
               ))}
             </VStack>
           </Box>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Flex justify="center" mt={6}>
+              <Pagination.Root 
+                count={transactionsWithDetails.length} 
+                pageSize={ITEMS_PER_PAGE} 
+                defaultPage={1}
+                page={currentPage}
+                onPageChange={handlePageChange}
+              >
+                <ButtonGroup variant="ghost" size="sm">
+                  <Pagination.PrevTrigger asChild>
+                    <IconButton>
+                      <LuChevronLeft />
+                    </IconButton>
+                  </Pagination.PrevTrigger>
+                  <Pagination.Items
+                    render={(page) => (
+                      <IconButton variant={{ base: "ghost", _selected: "outline" }}>
+                        {page.value}
+                      </IconButton>
+                    )}
+                  />
+                  <Pagination.NextTrigger asChild>
+                    <IconButton>
+                      <LuChevronRight />
+                    </IconButton>
+                  </Pagination.NextTrigger>
+                </ButtonGroup>
+              </Pagination.Root>
+            </Flex>
+          )}
         </>
       )}
 

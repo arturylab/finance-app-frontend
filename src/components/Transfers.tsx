@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTransfers } from '@/hooks/useTransfers';
 import { apiClient } from '@/lib/api';
 import {
@@ -31,7 +31,8 @@ import {
   NativeSelectRoot,
   Textarea,
   Heading,
-  Spacer
+  Spacer,
+  Pagination,
 } from '@chakra-ui/react';
 import { toaster } from '@/components/ui/toaster';
 import { 
@@ -40,8 +41,12 @@ import {
   LuTrash2, 
   LuArrowRightLeft,
   LuArrowRight,
+  LuChevronLeft,
+  LuChevronRight,
 } from "react-icons/lu";
 import { Account, CreateTransferData, UpdateTransferData } from '@/types/auth';
+
+const ITEMS_PER_PAGE = 10;
 
 export default function Transfers() {
   const [amount, setAmount] = useState('');
@@ -52,6 +57,7 @@ export default function Transfers() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loadingSupport, setLoadingSupport] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   
   const { open, onOpen, onClose } = useDisclosure();
 
@@ -76,6 +82,26 @@ export default function Transfers() {
       duration: 5000,
     }),
   });
+
+  // Calculate pagination
+  const { paginatedTransfers, totalPages } = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const paginated = transfers.slice(startIndex, endIndex);
+    const total = Math.ceil(transfers.length / ITEMS_PER_PAGE);
+    
+    return {
+      paginatedTransfers: paginated,
+      totalPages: total
+    };
+  }, [transfers, currentPage]);
+
+  // Reset to page 1 when transfers change
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+    }
+  }, [transfers, currentPage, totalPages]);
 
   // Load accounts
   useEffect(() => {
@@ -181,6 +207,10 @@ export default function Transfers() {
     onClose();
   };
 
+  const handlePageChange = (details: { page: number }) => {
+    setCurrentPage(details.page);
+  };
+
   const getAccountName = (accountId: number): string => {
     const account = accounts.find(acc => acc.id === accountId);
     return account ? account.name : 'Unknown Account';
@@ -252,6 +282,15 @@ export default function Transfers() {
         </EmptyState.Root>
       ) : (
         <>
+          {/* Pagination Info */}
+          <Flex justify="space-between" align="center" mb={4}>
+            <Text fontSize="sm" color="gray.600" _dark={{ color: "gray.400" }}>
+              Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to{' '}
+              {Math.min(currentPage * ITEMS_PER_PAGE, transfers.length)} of{' '}
+              {transfers.length} transfers
+            </Text>
+          </Flex>
+
           {/* Desktop table */}
           <Box display={{ base: "none", md: "block" }}>
             <Table.Root size="md" stickyHeader>
@@ -266,7 +305,7 @@ export default function Transfers() {
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {transfers.map((transfer) => (
+                {paginatedTransfers.map((transfer) => (
                   <Table.Row key={transfer.id}>
                     <Table.Cell>
                       {transfer.date}
@@ -360,7 +399,7 @@ export default function Transfers() {
           {/* Mobile Card */}
           <Box display={{ base: "block", md: "none" }}>
             <VStack gap={3}>
-              {transfers.map((transfer) => (
+              {paginatedTransfers.map((transfer) => (
                 <Card.Root key={transfer.id} w="full" size="sm" variant="outline">
                   <Card.Body p={4}>
                     <Table.Root size="sm">
@@ -396,8 +435,8 @@ export default function Transfers() {
                               </Text>
                               <HStack justify={"end"}>
                                 <IconButton 
-                                  // onClick={() => handleEdit(transfer)}
-                                  disabled={true}
+                                  onClick={() => handleEdit(transfer)}
+                                  disabled={false}
                                   variant="ghost"
                                   size="sm"
                                   aria-label="Edit transfer"
@@ -455,6 +494,39 @@ export default function Transfers() {
               ))}
             </VStack>
           </Box>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Flex justify="center" mt={6}>
+              <Pagination.Root 
+                count={transfers.length} 
+                pageSize={ITEMS_PER_PAGE} 
+                defaultPage={1}
+                page={currentPage}
+                onPageChange={handlePageChange}
+              >
+                <ButtonGroup variant="ghost" size="sm">
+                  <Pagination.PrevTrigger asChild>
+                    <IconButton>
+                      <LuChevronLeft />
+                    </IconButton>
+                  </Pagination.PrevTrigger>
+                  <Pagination.Items
+                    render={(page) => (
+                      <IconButton variant={{ base: "ghost", _selected: "outline" }}>
+                        {page.value}
+                      </IconButton>
+                    )}
+                  />
+                  <Pagination.NextTrigger asChild>
+                    <IconButton>
+                      <LuChevronRight />
+                    </IconButton>
+                  </Pagination.NextTrigger>
+                </ButtonGroup>
+              </Pagination.Root>
+            </Flex>
+          )}
         </>
       )}
 

@@ -93,7 +93,7 @@ export default function Dashboard() {
       "orange.500",
       "pink.500",
       "red.500",
-      "grey.500",
+      "gray.500",
     ];
     return colors[index % colors.length];
   };
