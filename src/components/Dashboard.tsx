@@ -547,10 +547,10 @@ export default function Dashboard() {
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Tooltip
-          cursor={false}
-          animationDuration={100}
-          content={<Chart.Tooltip hideLabel />}
-        />
+                        cursor={false}
+                        animationDuration={100}
+                        content={<Chart.Tooltip hideLabel />}
+                      />
                       <Pie
                         data={expenseChart.data}
                         dataKey={expenseChart.key("value")}

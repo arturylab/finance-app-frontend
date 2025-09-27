@@ -32,7 +32,9 @@ import {
   LuChevronDown,
   LuEllipsisVertical,
   LuAlignRight,
-  LuX
+  LuX,
+  LuLogOut,
+  LuUser,
 } from 'react-icons/lu';
 
 interface MenuItemProps {
@@ -217,13 +219,15 @@ const SideBar: React.FC<SideBarProps> = ({ children }) => {
                         onItemClick?.();
                       }}
                     >
+                      <LuUser />
                       <Link href='/dashboard/profile'>
-                        Profile
+                        <Box flex="1">Profile</Box>
                       </Link>
                     </Menu.Item>
                     <Menu.Separator />
                     <Menu.Item value="logout" onClick={handleLogout}>
-                      Logout
+                      <LuLogOut />
+                      <Box flex="1">Logout</Box>
                     </Menu.Item>
                   </Menu.Content>
                 </Menu.Positioner>
