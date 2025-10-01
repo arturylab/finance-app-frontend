@@ -147,7 +147,7 @@ export default function Dashboard() {
   const recentTransactions = useMemo(() => {
     return transactionsWithDetails
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 10);
+      .slice(0, 8);
   }, [transactionsWithDetails]);
 
   // Calculate top expense categories for current month
@@ -184,6 +184,7 @@ export default function Dashboard() {
 
     return Array.from(categoryTotals.values())
       .sort((a, b) => b.total - a.total)
+      .slice(0, 5);
   }, [transactionsWithDetails]);
 
   // Transform data for the chart
@@ -529,10 +530,10 @@ export default function Dashboard() {
         <Card.Root>
           <Card.Header>
             <Text fontSize="lg" fontWeight="semibold">
-              Monthly Expense Categories
+              Top Expense Categories
             </Text>
             <Text fontSize="sm" color="gray.600" _dark={{ color: 'gray.400' }}>
-              All spending categories for this month
+              Top spending categories for this month
             </Text>
           </Card.Header>
           <Card.Body>

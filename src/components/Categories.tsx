@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useCategories } from '@/hooks/useCategories';
+import { useTransactions } from '@/hooks/useTransactions';
 import {
   Box,
   Button,
@@ -28,32 +29,228 @@ import {
   Field,
   RadioGroup,
   Heading,
-  Spacer
+  Spacer,
+  Card,
+  FormatNumber,
+  createListCollection,
+  Select
 } from '@chakra-ui/react';
+import { Chart, useChart } from "@chakra-ui/charts";
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { 
   LuCirclePlus, 
   LuPencil, 
   LuTrash2, 
   LuTags,
+  LuChartPie,
+  LuCalendar,
 } from "react-icons/lu";
-import { CreateCategoryData, UpdateCategoryData, CategoryType } from '@/types/auth';
+import { CreateCategoryData, UpdateCategoryData, CategoryType, Category } from '@/types/auth';
+
+// Period filter type
+type PeriodFilter = 'all' | 'yearly' | 'monthly' | 'weekly' | 'daily' | 'custom';
+
+interface CategoryWithTotal extends Category {
+  total: number;
+  count: number;
+}
+
+// Chart data interface
+interface ChartDataItem {
+  name: string;
+  value: number;
+  count: number;
+  color: string;
+}
 
 export default function Categories() {
   const [name, setName] = useState('');
   const [type, setType] = useState<CategoryType | ''>('');
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   
   const { open, onOpen, onClose } = useDisclosure();
+  const { 
+    open: dateFilterOpen, 
+    onOpen: onDateFilterOpen, 
+    onClose: onDateFilterClose 
+  } = useDisclosure();
 
   const {
     incomeCategories,
     expenseCategories,
-    isLoading,
-    error,
+    isLoading: loadingCategories,
+    error: categoriesError,
     createCategory,
     updateCategory,
     deleteCategory,
   } = useCategories();
+
+  const {
+    transactionsWithDetails,
+    loading: loadingTransactions,
+    error: transactionsError,
+  } = useTransactions();
+
+  // Collection for period select
+  const periodCollection = createListCollection({
+    items: [
+      { label: 'All Time', value: 'all' },
+      { label: 'This Year', value: 'yearly' },
+      { label: 'This Month', value: 'monthly' },
+      { label: 'This Week', value: 'weekly' },
+      { label: 'Today', value: 'daily' },
+      { label: 'Custom Range', value: 'custom' },
+    ],
+  });
+
+  // Helper function to get consistent colors for categories
+  const getColorForIndex = (index: number): string => {
+    const colors = [
+      "purple.500",
+      "cyan.500",
+      "blue.500",
+      "teal.500",
+      "green.500",
+      "yellow.500",
+      "orange.500",
+      "pink.500",
+      "red.500",
+      "gray.500",
+    ];
+    return colors[index % colors.length];
+  };
+
+  // Handle period change
+  const handlePeriodChange = (value: PeriodFilter) => {
+    setPeriodFilter(value);
+    if (value === 'custom') {
+      onDateFilterOpen();
+    }
+  };
+
+  // Apply custom date range
+  const applyCustomDateRange = () => {
+    if (startDate && endDate) {
+      onDateFilterClose();
+    }
+  };
+
+  // Reset custom date range
+  const resetCustomDateRange = () => {
+    setStartDate('');
+    setEndDate('');
+    setPeriodFilter('all');
+    onDateFilterClose();
+  };
+
+  // Filter transactions by period
+  const filteredTransactions = useMemo(() => {
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+    return transactionsWithDetails.filter(transaction => {
+      const [year, month, day] = transaction.date.split('-').map(Number);
+      const transactionDate = new Date(year, month - 1, day);
+
+      switch (periodFilter) {
+        case 'daily':
+          return transactionDate >= startOfDay;
+        case 'weekly':
+          return transactionDate >= startOfWeek;
+        case 'monthly':
+          return transactionDate >= startOfMonth;
+        case 'yearly':
+          return transactionDate >= startOfYear;
+        case 'custom':
+          if (startDate && endDate) {
+            const customStartDate = new Date(startDate);
+            const customEndDate = new Date(endDate);
+            customEndDate.setHours(23, 59, 59, 999); // Include the entire end date
+            return transactionDate >= customStartDate && transactionDate <= customEndDate;
+          }
+          return true;
+        case 'all':
+        default:
+          return true;
+      }
+    });
+  }, [transactionsWithDetails, periodFilter, startDate, endDate]);
+
+  // Calculate category totals
+  const categoriesWithTotals = useMemo((): CategoryWithTotal[] => {
+    const categoryTotals = new Map<number, { category: Category; total: number; count: number }>();
+
+    filteredTransactions.forEach(transaction => {
+      if (transaction.category) {
+        const existing = categoryTotals.get(transaction.category.id);
+        if (existing) {
+          existing.total += parseFloat(transaction.amount);
+          existing.count += 1;
+        } else {
+          categoryTotals.set(transaction.category.id, {
+            category: transaction.category,
+            total: parseFloat(transaction.amount),
+            count: 1,
+          });
+        }
+      }
+    });
+
+    return Array.from(categoryTotals.values())
+      .map(item => ({
+        ...item.category,
+        total: item.total,
+        count: item.count,
+      }))
+      .sort((a, b) => b.total - a.total);
+  }, [filteredTransactions]);
+
+  // Separate income and expense categories with totals
+  const incomeCategoriesWithTotals = useMemo(() => 
+    categoriesWithTotals.filter(cat => cat.type === 'INCOME'),
+    [categoriesWithTotals]
+  );
+
+  const expenseCategoriesWithTotals = useMemo(() => 
+    categoriesWithTotals.filter(cat => cat.type === 'EXPENSE'),
+    [categoriesWithTotals]
+  );
+
+  // Chart data for income categories
+  const incomeChartData = useMemo((): ChartDataItem[] => {
+    return incomeCategoriesWithTotals.map((item, index) => ({
+      name: item.name,
+      value: item.total,
+      count: item.count,
+      color: getColorForIndex(index),
+    }));
+  }, [incomeCategoriesWithTotals]);
+
+  // Chart data for expense categories
+  const expenseChartData = useMemo((): ChartDataItem[] => {
+    return expenseCategoriesWithTotals.map((item, index) => ({
+      name: item.name,
+      value: item.total,
+      count: item.count,
+      color: getColorForIndex(index),
+    }));
+  }, [expenseCategoriesWithTotals]);
+
+  const incomeChart = useChart<ChartDataItem>({
+    data: incomeChartData,
+  });
+
+  const expenseChart = useChart<ChartDataItem>({
+    data: expenseChartData,
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,7 +305,25 @@ export default function Categories() {
     onClose();
   };
 
-  if (isLoading) {
+  // Format custom date range display
+  const getCustomDateRangeText = () => {
+    if (periodFilter === 'custom' && startDate && endDate) {
+      const start = new Date(startDate).toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
+      const end = new Date(endDate).toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
+      return `${start} - ${end}`;
+    }
+    return '';
+  };
+
+  if (loadingCategories || loadingTransactions) {
     return (
       <Flex justify="center" align="center" minH="200px">
         <Spinner size="lg" color="blue.500" />
@@ -116,16 +331,20 @@ export default function Categories() {
     );
   }
 
-  if (error) {
+  if (categoriesError || transactionsError) {
     return (
       <Alert.Root status="error">
         <Alert.Title>Error!</Alert.Title>
-        <Alert.Description>{error}</Alert.Description>
+        <Alert.Description>{categoriesError || transactionsError}</Alert.Description>
       </Alert.Root>
     );
   }
 
-  const renderCategoryTable = (categories: typeof incomeCategories, title: string, colorPalette: 'green' | 'red') => (
+  const renderCategoryTable = (
+    categories: typeof incomeCategories, 
+    title: string, 
+    colorPalette: 'green' | 'red'
+  ) => (
     <Box>
       <VStack align="start" mb={4}>
         <Text fontSize="xl" fontWeight="semibold">
@@ -234,6 +453,106 @@ export default function Categories() {
     </Box>
   );
 
+  const renderCategoryChart = (
+    categoriesData: CategoryWithTotal[],
+    chart: ReturnType<typeof useChart<ChartDataItem>>,
+    title: string,
+    colorPalette: 'green' | 'red'
+  ) => (
+    <Card.Root>
+      <Card.Header>
+        <HStack justify="space-between">
+          <VStack align="start">
+            <Text fontSize="lg" fontWeight="semibold">
+              {title}
+            </Text>
+            <Text fontSize="sm" color="gray.600" _dark={{ color: 'gray.400' }}>
+              Transaction breakdown by category
+            </Text>
+          </VStack>
+          <Box p={3} borderRadius="lg" bg={`${colorPalette}.50`} _dark={{ bg: `${colorPalette}.900` }}>
+            <LuChartPie color={colorPalette === 'green' ? '#059669' : '#dc2626'} size={24} />
+          </Box>
+        </HStack>
+      </Card.Header>
+      <Card.Body>
+        {categoriesData.length === 0 ? (
+          <Text fontSize="sm" color="gray.500" textAlign="center" py={8}>
+            No transaction data for this period
+          </Text>
+        ) : (
+          <VStack gap={4} align="stretch">
+            {/* Pie Chart */}
+            <Chart.Root height="300px" mx="auto" chart={chart}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Tooltip
+                    cursor={false}
+                    animationDuration={100}
+                    content={<Chart.Tooltip hideLabel />}
+                  />
+                  <Pie
+                    data={chart.data}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={120}
+                    innerRadius={0}
+                    paddingAngle={2}
+                    isAnimationActive={true}
+                    animationDuration={1000}
+                  >
+                    {chart.data.map((item) => (
+                      <Cell 
+                        key={item.name} 
+                        fill={chart.color(item.color)} 
+                      />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </Chart.Root>
+
+            {/* Summary List */}
+            <VStack gap={2} align="stretch" mt={2}>
+              <Text fontSize="sm" fontWeight="medium" color="gray.700" _dark={{ color: 'gray.300' }}>
+                Category Details:
+              </Text>
+              {categoriesData.map((item, index) => (
+                <HStack key={item.id} justify="space-between">
+                  <HStack>
+                    <Box 
+                      w={3} 
+                      h={3} 
+                      borderRadius="sm"
+                      bg={chart.color(getColorForIndex(index))}
+                    />
+                    <VStack align="start" gap={0}>
+                      <Text fontSize="sm">
+                        {item.name}
+                      </Text>
+                      <Text fontSize="xs" color="gray.500">
+                        {item.count} {item.count === 1 ? 'transaction' : 'transactions'}
+                      </Text>
+                    </VStack>
+                  </HStack>
+                  <Text fontWeight="medium" fontSize="sm">
+                    <FormatNumber
+                      value={item.total}
+                      style="currency"
+                      currency="USD"
+                    />
+                  </Text>
+                </HStack>
+              ))}
+            </VStack>
+          </VStack>
+        )}
+      </Card.Body>
+    </Card.Root>
+  );
+
   return (
     <Box p={6} maxW="7xl" mx="auto">
       <HStack>
@@ -257,6 +576,84 @@ export default function Categories() {
         </Box>
       </HStack>
 
+      {/* Period Filter */}
+      <Box mb={6}>
+        <HStack wrap="wrap" gap={4}>
+          <Select.Root 
+            collection={periodCollection}
+            value={[periodFilter]}
+            onValueChange={(e) => handlePeriodChange(e.value[0] as PeriodFilter)}
+            size="sm" 
+            width="200px"
+          >
+            <Select.Label>Period:</Select.Label>
+            <Select.Control>
+              <Select.Trigger>
+                <Select.ValueText placeholder="Select period" />
+              </Select.Trigger>
+              <Select.IndicatorGroup>
+                <Select.Indicator />
+              </Select.IndicatorGroup>
+            </Select.Control>
+            <Portal>
+              <Select.Positioner>
+                <Select.Content>
+                  {periodCollection.items.map((item) => (
+                    <Select.Item item={item} key={item.value}>
+                      {item.label}
+                      <Select.ItemIndicator />
+                    </Select.Item>
+                  ))}
+                </Select.Content>
+              </Select.Positioner>
+            </Portal>
+          </Select.Root>
+
+          {/* Custom Date Range Display */}
+          {periodFilter === 'custom' && startDate && endDate && (
+            <HStack>
+              <Badge colorPalette="blue" size="lg" borderRadius="md">
+                <HStack>
+                  <LuCalendar size={14} />
+                  <Text fontSize="sm">{getCustomDateRangeText()}</Text>
+                </HStack>
+              </Badge>
+              <IconButton
+                size="xs"
+                variant="ghost"
+                onClick={() => onDateFilterOpen()}
+                aria-label="Edit date range"
+              >
+                <LuPencil size={14} />
+              </IconButton>
+            </HStack>
+          )}
+        </HStack>
+      </Box>
+
+      {/* Analytics Charts */}
+      <Grid 
+        templateColumns={{ base: '1fr', lg: '1fr 1fr' }} 
+        gap={6}
+        mb={8}
+      >
+        {/* Income Chart */}
+        {renderCategoryChart(
+          incomeCategoriesWithTotals,
+          incomeChart,
+          'Income Analytics',
+          'green'
+        )}
+        
+        {/* Expense Chart */}
+        {renderCategoryChart(
+          expenseCategoriesWithTotals,
+          expenseChart,
+          'Expense Analytics',
+          'red'
+        )}
+      </Grid>
+
       {/* Categories Tables */}
       <Grid 
         templateColumns={{ base: '1fr', lg: '1fr 1fr' }} 
@@ -268,6 +665,62 @@ export default function Categories() {
         {/* Expense Categories */}
         {renderCategoryTable(expenseCategories, 'Expense Categories', 'red')}
       </Grid>
+
+      {/* Custom Date Range Dialog */}
+      <Dialog.Root open={dateFilterOpen} onOpenChange={(e) => !e.open && onDateFilterClose()}>
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content _dark={{ bg: 'gray.900' }}>
+              <Dialog.Header>
+                <Dialog.Title>Custom Date Range</Dialog.Title>
+              </Dialog.Header>
+              <Dialog.Body>
+                <VStack gap={4} align="stretch">
+                  <Field.Root>
+                    <Field.Label>Start Date</Field.Label>
+                    <Input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      max={endDate || undefined}
+                    />
+                  </Field.Root>
+                  
+                  <Field.Root>
+                    <Field.Label>End Date</Field.Label>
+                    <Input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      min={startDate || undefined}
+                    />
+                  </Field.Root>
+                </VStack>
+              </Dialog.Body>
+              <Dialog.Footer>
+                <ButtonGroup>
+                  <Button 
+                    variant="outline" 
+                    onClick={resetCustomDateRange}
+                  >
+                    Reset
+                  </Button>
+                  <Button 
+                    onClick={applyCustomDateRange}
+                    disabled={!startDate || !endDate}
+                  >
+                    Apply
+                  </Button>
+                </ButtonGroup>
+              </Dialog.Footer>
+              <Dialog.CloseTrigger asChild>
+                <CloseButton size="sm" />
+              </Dialog.CloseTrigger>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
 
       {/* Add/Edit Category Drawer */}
       <Drawer.Root open={open} onOpenChange={(e) => !e.open && handleCancel()}>
@@ -291,7 +744,7 @@ export default function Categories() {
             </Drawer.Header>
 
             <Drawer.Body>
-              <form onSubmit={handleSubmit} id="category-form">
+              <Box as="form" onSubmit={handleSubmit} id="category-form">
                 <Fieldset.Root size="lg" maxW="md">
                   <Stack gap={5}>
                     <Fieldset.Legend>Category Details</Fieldset.Legend>
@@ -335,7 +788,7 @@ export default function Categories() {
                     </Field.Root>
                   </Stack>
                 </Fieldset.Root>
-              </form>
+              </Box>
             </Drawer.Body>
             
             <Drawer.Footer>
